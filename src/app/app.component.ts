@@ -28,12 +28,12 @@ export class MyApp {
       splashScreen.hide();
 
       this.backgroundMode.enable();
-      this.readFirebase();
-      this.watchPosition();
+      this.startFirebase();
+      this.startGeolocation();
     });
   }
 
-  readFirebase() {
+  startFirebase() {
     var self = this;
 
     var config = {
@@ -55,10 +55,27 @@ export class MyApp {
     });
   }
 
-  watchPosition() {
+  startGeolocation() {
     var self = this;
+    var preDis = {};
+    
     this.geolocation.watchPosition().subscribe(position => {
-      console.log(position.coords.longitude + ' ' + position.coords.latitude);
+      if (self.events != null && self.events != undefined) {
+        self.events.forEach(function (event) {
+          let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude );
+
+          console.log('distance: ' + distance);
+
+          if (preDis[event.val().id] == null) {
+            preDis[event.val().id] = 20;
+          }
+          if (distance < 20 && preDis[event.val().id] >= 20) {
+            console.log('background track, enter event zone');
+            self.presentToast(event.val().name, event.val().startDate);
+          }
+          preDis[event.val().id] = distance;
+        })
+      }
     });
   }
 

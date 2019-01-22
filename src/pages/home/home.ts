@@ -15,6 +15,7 @@ export class HomePage {
   private eventForm: FormGroup;
 
   location = {
+    id: null,
     lat: null,
     lng: null,
     name: null,
@@ -91,6 +92,7 @@ export class HomePage {
 
     this.GoogleGeocoder.geocode({ 'placeId': item.place_id }, (results, status) => {
       if (status === 'OK' && results[0]) {
+        this.location.id = results[0].place_id;
         this.location.lat = results[0].geometry.location.lat();
         this.location.lng = results[0].geometry.location.lng();
         this.location.name = results[0].formatted_address;
@@ -100,6 +102,7 @@ export class HomePage {
 
   create() {
     firebase.database().ref('event/').push().set({
+      id: this.location.id,
       latitude: this.location.lat,
       longitude: this.location.lng,
       name: this.location.name,
