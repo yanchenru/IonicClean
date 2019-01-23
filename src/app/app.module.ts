@@ -13,6 +13,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { Geolocation } from '@ionic-native/geolocation';
 import { BackgroundMode } from '@ionic-native/background-mode';
+import { LocalNotifications } from '@ionic-native/local-notifications';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { BackgroundMode } from '@ionic-native/background-mode';
     SplashScreen,
     Geolocation,
     BackgroundMode,
+    LocalNotifications,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })

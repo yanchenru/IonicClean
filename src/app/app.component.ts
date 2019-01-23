@@ -9,6 +9,7 @@ import { ToastController } from 'ionic-angular';
 import { AlertController } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
 import { BackgroundMode } from '@ionic-native/background-mode';
+import { LocalNotifications } from '@ionic-native/local-notifications';
 import firebase from 'firebase';
 
 @Component({
@@ -20,10 +21,9 @@ export class MyApp {
   events: any;
 
   constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private toastCtrl: ToastController,
-    private alertCtrl: AlertController, private geolocation: Geolocation, private backgroundMode: BackgroundMode) {
+    private alertCtrl: AlertController, private geolocation: Geolocation, private backgroundMode: BackgroundMode,
+    private localNotifications: LocalNotifications) {
     platform.ready().then(() => {
-      // Okay, so the platform is ready and our plugins are available.
-      // Here you can do any higher level native things you might need.
       statusBar.styleDefault();
       splashScreen.hide();
 
@@ -58,20 +58,20 @@ export class MyApp {
   startGeolocation() {
     var self = this;
     var preDis = {};
-    
+
     this.geolocation.watchPosition().subscribe(position => {
       if (self.events != null && self.events != undefined) {
         self.events.forEach(function (event) {
-          let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude );
+          let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
 
           console.log('distance: ' + distance);
 
           if (preDis[event.val().id] == null) {
-            preDis[event.val().id] = 20;
+            preDis[event.val().id] = event.val().proximity;
           }
-          if (distance < 20 && preDis[event.val().id] >= 20) {
+          if (distance < event.val().proximity && preDis[event.val().id] >= event.val().proximity) {
             console.log('background track, enter event zone');
-            self.presentToast(event.val().name, event.val().startDate);
+            self.sendNotification(event.val().name, event.val().startDate);
           }
           preDis[event.val().id] = distance;
         })
@@ -88,26 +88,21 @@ export class MyApp {
     return dis * 1000;
   }
 
-  presentToast(place, startDate) {
-    let toast = this.toastCtrl.create({
-      message: 'Event at ' + place + ', on ' + startDate,
-      duration: 10000,
-      position: 'top',
-      showCloseButton: true,
-      closeButtonText: 'Join'
+  sendNotification(place, startDate) {
+    this.localNotifications.schedule({
+      id: 1,
+      title: 'Event',
+      text: 'at ' + place + ', on ' + startDate + '. Join?',
+      actions: [{ id: 'yes', title: 'Yes' }, { id: 'no', title: 'No' }]
     });
 
-    toast.onDidDismiss((data, role) => {
-      if (role == 'close') {
-        let alert = this.alertCtrl.create({
-          title: 'Welcome',
-          subTitle: 'Looking forward to see you',
-          buttons: ['Dismiss']
-        });
-        alert.present();
-      }
-    });
-
-    toast.present();
+    this.localNotifications.on('yes').subscribe(() => {
+      let alert = this.alertCtrl.create({
+        title: 'Welcome',
+        subTitle: 'Looking forward to see you',
+        buttons: ['Dismiss']
+      });
+      alert.present();
+    })
   }
 }
