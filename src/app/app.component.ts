@@ -5,7 +5,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { TabsPage } from '../pages/tabs/tabs';
 
-import { ToastController } from 'ionic-angular';
 import { AlertController } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
 import { BackgroundMode } from '@ionic-native/background-mode';
@@ -20,9 +19,8 @@ export class MyApp {
 
   events: any;
 
-  constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private toastCtrl: ToastController,
-    private alertCtrl: AlertController, private geolocation: Geolocation, private backgroundMode: BackgroundMode,
-    private localNotifications: LocalNotifications) {
+  constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private alertCtrl: AlertController, 
+    private geolocation: Geolocation, private backgroundMode: BackgroundMode, private localNotifications: LocalNotifications) {
     platform.ready().then(() => {
       statusBar.styleDefault();
       splashScreen.hide();
@@ -50,8 +48,9 @@ export class MyApp {
     eventRef.once('value').then(function (snapshot) {
       self.events = snapshot;
     })
-    eventRef.on('value', function (snapshot) {
+    eventRef.orderByChild("endTimestamp").startAt(Date.now()).on('value', function (snapshot) {
       self.events = snapshot;
+      console.log(self.events);
     });
   }
 
@@ -64,7 +63,7 @@ export class MyApp {
         self.events.forEach(function (event) {
           let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
 
-          console.log('distance: ' + distance);
+          //console.log('distance: ' + distance);
 
           if (preDis[event.val().id] == null) {
             preDis[event.val().id] = event.val().proximity;

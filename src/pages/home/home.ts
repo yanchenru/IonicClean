@@ -26,12 +26,22 @@ export class HomePage {
   autocompleteItems: any;
   GoogleGeocoder: any;
 
-  startDate = new Date().toISOString().substr(0, 10);
-  endDate = new Date().toISOString().substr(0, 10);
-  startTime = new Date().toISOString().substr(11, 5);
-  endTime = new Date().toISOString().substr(11, 5);
+  startDate: any;
+  endDate: any;
+  startTime: any;
+  endTime: any;
+  startTimestamp: any;
+  endTimestamp: any;
 
-  constructor(public navCtrl: NavController, private formBuilder: FormBuilder, private zone: NgZone) {
+  constructor(public navCtrl: NavController, private formBuilder: FormBuilder, private zone: NgZone) {    
+    var currentDateTime = new Date();
+    //ion-datetime requires ISO format, use getTimezoneOffset to turn local date into XXXX-XX-XX format
+    var currentDateTimeISOFormat = new Date(currentDateTime.getTime() - currentDateTime.getTimezoneOffset()*60000).toISOString();
+    this.startDate = currentDateTimeISOFormat.substr(0, 10);
+    this.endDate = currentDateTimeISOFormat.substr(0, 10);
+    this.startTime = currentDateTimeISOFormat.substr(11, 5);
+    this.endTime = currentDateTimeISOFormat.substr(11, 5);
+
     this.eventForm = this.formBuilder.group({
       pickEventStartDate: ['', Validators.required],
       pickEventEndDate: ['', Validators.required],
@@ -39,7 +49,7 @@ export class HomePage {
       pickEventEndTime: ['', Validators.required],
       address: ['', Validators.required],
       proximity: ['', Validators.compose([Validators.required, Validators.pattern('^[0-9]*$')])],
-    }, { validator: this.dateLessThan("pickEventStartDate", "pickEventEndDate", "pickEventStartTime", "pickEventEndTime") });
+    }, { validator: this.dateLessThan() });
 
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
     this.autocomplete = { input: '' };
@@ -47,25 +57,18 @@ export class HomePage {
     this.GoogleGeocoder = new google.maps.Geocoder();
   }
   
-  dateLessThan(startDate: string, endDate: string, startTime: string, finishTime: string) {
+  dateLessThan() {
     return (group: FormGroup): { [key: string]: any } => {
-      let sd = group.controls[startDate];
-      let ed = group.controls[endDate];
-      let st = group.controls[startTime];
-      let ft = group.controls[finishTime];
-      if (sd.value > ed.value) {
-        return {
-          dates: "Start Date should be equal or less than End Date"
-        };
+      this.startTimestamp = new Date(this.startDate + ' ' + this.startTime).getTime();
+      this.endTimestamp = new Date(this.endDate + ' ' + this.endTime).getTime();
+      if(this.startTimestamp<this.endTimestamp){
+        return{}
       }
-      else if (sd.value === ed.value) {
-        if (st.value > ft.value) {
-          return {
-            time: "Start Time should be equal or less than Finish Time"
-          };
+      else{
+        return{
+          m: "Start Date should be equal or less than End Date"
         }
       }
-      return {};
     }
   }
 
@@ -101,8 +104,11 @@ export class HomePage {
   }
 
   create() {
+    var d = new Date(this.eventForm.value.pickEventEndDate + ' ' + this.eventForm.value.pickEventEndTime);
+    var endTimestamp = d.getTime();
+
     firebase.database().ref('event/').push().set({
-      id: this.location.id,
+      id: this.location.id + Date.now(),
       latitude: this.location.lat,
       longitude: this.location.lng,
       name: this.location.name,
@@ -111,6 +117,7 @@ export class HomePage {
       endDate: this.eventForm.value.pickEventEndDate,
       startTime: this.eventForm.value.pickEventStartTime,
       endTime: this.eventForm.value.pickEventEndTime,
+      endTimestamp: endTimestamp,
     });
   }
 }
