@@ -104,9 +104,6 @@ export class HomePage {
   }
 
   create() {
-    var d = new Date(this.eventForm.value.pickEventEndDate + ' ' + this.eventForm.value.pickEventEndTime);
-    var endTimestamp = d.getTime();
-
     firebase.database().ref('event/').push().set({
       id: this.location.id + Date.now(),
       latitude: this.location.lat,
@@ -117,7 +114,8 @@ export class HomePage {
       endDate: this.eventForm.value.pickEventEndDate,
       startTime: this.eventForm.value.pickEventStartTime,
       endTime: this.eventForm.value.pickEventEndTime,
-      endTimestamp: endTimestamp,
+      startTimestamp: this.startTimestamp,
+      endTimestamp: this.endTimestamp,
     });
   }
 }
