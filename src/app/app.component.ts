@@ -19,7 +19,7 @@ export class MyApp {
 
   events: any;
 
-  constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private alertCtrl: AlertController, 
+  constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private alertCtrl: AlertController,
     private geolocation: Geolocation, private backgroundMode: BackgroundMode, private localNotifications: LocalNotifications) {
     platform.ready().then(() => {
       statusBar.styleDefault();
@@ -45,12 +45,8 @@ export class MyApp {
     firebase.initializeApp(config);
 
     var eventRef = firebase.database().ref('event/');
-    eventRef.once('value').then(function (snapshot) {
-      self.events = snapshot;
-    })
     eventRef.orderByChild("endTimestamp").startAt(Date.now()).on('value', function (snapshot) {
       self.events = snapshot;
-      console.log(self.events);
     });
   }
 
@@ -61,18 +57,19 @@ export class MyApp {
     this.geolocation.watchPosition().subscribe(position => {
       if (self.events != null && self.events != undefined) {
         self.events.forEach(function (event) {
-          let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
+          if (Date.now() < event.val().endTimestamp) {
+            let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
 
-          //console.log('distance: ' + distance);
+            //console.log('distance: ' + distance);
 
-          if (preDis[event.val().id] == null) {
-            preDis[event.val().id] = event.val().proximity;
+            if (preDis[event.val().id] == null) {
+              preDis[event.val().id] = event.val().proximity;
+            }
+            if (distance < event.val().proximity && preDis[event.val().id] >= event.val().proximity) {
+              self.sendNotification(event.val().name, event.val().startDate);
+            }
+            preDis[event.val().id] = distance;
           }
-          if (distance < event.val().proximity && preDis[event.val().id] >= event.val().proximity) {
-            console.log('background track, enter event zone');
-            self.sendNotification(event.val().name, event.val().startDate);
-          }
-          preDis[event.val().id] = distance;
         })
       }
     });
