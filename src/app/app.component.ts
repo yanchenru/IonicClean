@@ -24,11 +24,6 @@ export class MyApp {
       splashScreen.hide();
 
       this.backgroundMode.on('activate').subscribe(() => {
-        // this.localNotifications.schedule({
-        //   text: 'There is a legendary Pokemon near you'
-        // });
-        // //this.startFirebase();
-        console.log('back');
         this.startGeolocation();
       });
       this.backgroundMode.enable();
@@ -65,7 +60,7 @@ export class MyApp {
         self.events.forEach(function (event) {
           if (Date.now() < event.val().endTimestamp) {
             let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
-            console.log('distance: ' + distance);
+            //console.log('distance: ' + distance);
             if (preDis[event.val().id] == null) {
               preDis[event.val().id] = event.val().proximity;
             }
@@ -90,7 +85,6 @@ export class MyApp {
 
   sendNotification(place, startDate) {
     this.localNotifications.schedule({
-      //id: 1,
       title: 'Event',
       text: 'at ' + place + ', on ' + startDate + '. Join?',
       actions: [{ id: 'yes', title: 'Yes' }, { id: 'no', title: 'No' }]
