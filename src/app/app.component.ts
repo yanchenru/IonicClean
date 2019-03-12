@@ -2,9 +2,7 @@ import { Component } from '@angular/core';
 import { Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-
 import { TabsPage } from '../pages/tabs/tabs';
-
 import { AlertController } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
 import { BackgroundMode } from '@ionic-native/background-mode';
@@ -25,6 +23,14 @@ export class MyApp {
       statusBar.styleDefault();
       splashScreen.hide();
 
+      this.backgroundMode.on('activate').subscribe(() => {
+        // this.localNotifications.schedule({
+        //   text: 'There is a legendary Pokemon near you'
+        // });
+        // //this.startFirebase();
+        console.log('back');
+        this.startGeolocation();
+      });
       this.backgroundMode.enable();
       this.startFirebase();
       this.startGeolocation();
@@ -59,9 +65,7 @@ export class MyApp {
         self.events.forEach(function (event) {
           if (Date.now() < event.val().endTimestamp) {
             let distance = self.calculateDistance(event.val().latitude, position.coords.latitude, event.val().longitude, position.coords.longitude);
-
-            //console.log('distance: ' + distance);
-
+            console.log('distance: ' + distance);
             if (preDis[event.val().id] == null) {
               preDis[event.val().id] = event.val().proximity;
             }
@@ -86,7 +90,7 @@ export class MyApp {
 
   sendNotification(place, startDate) {
     this.localNotifications.schedule({
-      id: 1,
+      //id: 1,
       title: 'Event',
       text: 'at ' + place + ', on ' + startDate + '. Join?',
       actions: [{ id: 'yes', title: 'Yes' }, { id: 'no', title: 'No' }]
